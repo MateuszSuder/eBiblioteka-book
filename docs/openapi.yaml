@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Book service
+  description: |-
+  version: 1.0.0
+servers:
+  - url: https://localhost/api/book
+    description: Local development
+paths:
+  /book:
+    post:
+      description: Tworzy nową książkę
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+      responses:
+        201:
+          description: Książka dodana
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        403:
+          $ref: "#/components/responses/Forbidden"
+        409:
+          description: Książka istnieje
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+  /book/{id}:
+    get:
+      description: Wyszukuje książkę po id
+      parameters:
+        - in: path
+          name: id
+          description: ID książki
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Książka znaleziona
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Book"
+                  - type: object
+                    properties:
+                      availability:
+                        $ref: "#/components/schemas/BookAvailability"
+        404:
+          description: Książka nieznaleziona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+    put:
+      description: Edycja książki
+      parameters:
+        - in: path
+          name: id
+          description: ID książki
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+      responses:
+        200:
+          description: Książka zmieniona
+        403:
+          $ref: "#/components/responses/Forbidden"
+        404:
+          description: Książka nieznaleziona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericError"
+  /books:
+    get:
+      description: Zwraca listę książek
+      parameters:
+        - $ref: "#/components/parameters/SearchParameter"
+        - $ref: "#/components/parameters/CategoryFilter"
+        - in: query
+          name: offset
+          description: Offset
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: limit
+          description: Limit
+          schema:
+            type: number
+      responses:
+        200:
+          description: Zwrócono listę książek
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookList"
+
+components:
+  responses:
+    Forbidden:
+      description: Brak uprawnień
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GenericError"
+  parameters:
+    SearchParameter:
+      in: query
+      description: Wyszukiwanie po nazwie książki
+      name: search
+      required: false
+      schema:
+        type: string
+    CategoryFilter:
+      in: query
+      description: Filtrowanie po kategorii
+      name: category
+      required: false
+      schema:
+        type: string
+    BookSort:
+      in: query
+      description: Sortowanie
+      name: sort
+      required: true
+  schemas:
+    Book:
+      type: object
+      properties:
+        isbn:
+          type: string
+          example: 978-83-283-9007-2
+        title:
+          type: string
+        category:
+          type: string
+        amount:
+          type: number
+        author:
+          type: string
+        publisher:
+          type: string
+    BookAvailability:
+      description: Stan książki i ilość dostępnych. Taka informacja będzie złożona z zapytań do reservation service i borrowing service wraz z "Amount z książki".
+      type: object
+      properties:
+        isAvailable:
+          type: boolean
+        amountAvailable:
+          type: number
+    BookList:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+    PaginationInput:
+      type: object
+      properties:
+        offset:
+          description: Początkowy index zwracanych wartości
+          type: number
+        limit:
+          description: Ilość wartości
+          type: number
+    Pagination:
+      type: object
+      allOf:
+        - properties:
+            count:
+              description: Ilość możliwych wartości
+              type: number
+        - $ref: "#/components/schemas/PaginationInput"
+    GenericError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
