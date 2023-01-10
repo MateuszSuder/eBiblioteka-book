@@ -4,10 +4,33 @@ info:
   description: |-
   version: 1.0.0
 servers:
-  - url: https://localhost/api/book
+  - url: https://localhost/api
     description: Local development
 paths:
   /book:
+    get:
+      description: Zwraca listę książek
+      parameters:
+        - $ref: "#/components/parameters/SearchParameter"
+        - $ref: "#/components/parameters/CategoryFilter"
+        - in: query
+          name: offset
+          description: Offset
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: limit
+          description: Limit
+          schema:
+            type: number
+      responses:
+        200:
+          description: Zwrócono listę książek
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookList"
     post:
       description: Tworzy nową książkę
       requestBody:
@@ -87,30 +110,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GenericError"
-  /books:
+  /book/categories:
     get:
-      description: Zwraca listę książek
-      parameters:
-        - $ref: "#/components/parameters/SearchParameter"
-        - $ref: "#/components/parameters/CategoryFilter"
-        - in: query
-          name: offset
-          description: Offset
-          required: true
-          schema:
-            type: number
-        - in: query
-          name: limit
-          description: Limit
-          schema:
-            type: number
+      description: Zwraca wszystkie kategorie
       responses:
         200:
-          description: Zwrócono listę książek
+          description: Zwrócono kategorie
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BookList"
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      type: string
 
 components:
   responses:
@@ -135,15 +149,12 @@ components:
       required: false
       schema:
         type: string
-    BookSort:
-      in: query
-      description: Sortowanie
-      name: sort
-      required: true
   schemas:
     Book:
       type: object
       properties:
+        _id:
+          type: string
         isbn:
           type: string
           example: 978-83-283-9007-2
