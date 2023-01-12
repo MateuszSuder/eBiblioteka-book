@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const BookSchema = new mongoose.Schema({
     isbn: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     title: {
         type: String,
@@ -19,12 +20,12 @@ const BookSchema = new mongoose.Schema({
     },
     publisher: {
         type: String,
-        required: true
+        required: [true, "Pole wydawca jest wymagane"]
     },
     amount: {
         type: Number,
         required: true,
-        min: 1
+        min: [1, "Nieprawidłowa ilość"]
     },
 })
 
